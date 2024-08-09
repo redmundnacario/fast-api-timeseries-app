@@ -99,4 +99,4 @@ jobs:
       - name: Deploy to ECS
         run: |
           # Use the loaded image for deployment
-          aws ecs update-service --cluster "${{env.TARGET_CLUSTER}}" --service "fast-api-service" --force-new-deployment
+          aws ecs update-service --cluster "${{secrets.TARGET_CLUSTER}}" --service "fast-api-service" --force-new-deployment
