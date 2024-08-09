@@ -7,6 +7,15 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      RELEASE_VERSION:
+        description: 'Release version for deployment'
+        required: false
+        default: ''
+
+env:
+  APP_VERSION: ${{ github.event.inputs.RELEASE_VERSION || 'latest' }}
 
 jobs:
   # test:
@@ -52,7 +61,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    # needs: test
+    if: github.ref == 'refs/heads/main' && github.event.inputs.RELEASE_VERSION != ''
 
     steps:
       - name: Checkout code
@@ -63,21 +72,23 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t myapp:${{ github.sha }} ./backend
-
-      - name: Save Docker image to TAR
-        run: |
-          docker save myapp:${{ github.sha }} -o docker_image.tar
+          docker build -t myapp:${{env.APP_VERSION}} ./backend
+          docker save myapp:${{env.APP_VERSION}} -o myapp-image.tar
 
       - name: Save Docker image as artifact
         uses: actions/upload-artifact@v3
         with:
           name: docker-image
-          path: docker_image.tar
+          path: myapp-image.tar
 
-  deploy:
+      # - name: Create ECR repository
+      #   run: |
+      #     aws ecr create-repository --repository-name myapp --region ${{ secrets.AWS_REGION }} || true
+
+  pre-deploy:
     runs-on: ubuntu-latest
     needs: build
+    if: github.ref == 'refs/heads/main' && github.event.inputs.RELEASE_VERSION != ''
 
     steps:
       - name: Download Docker image artifact
@@ -85,18 +96,76 @@ jobs:
         with:
           name: docker-image
 
-      - name: Load Docker image from TAR
-        run: |
-          docker load -i docker_image.tar
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Load Docker image
+        run: |
+          docker load -i myapp-image.tar
+
+      - name: Tag Docker image for ECR
+        run: |
+          docker tag myapp:${{env.APP_VERSION}} "${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{secrets.AWS_REGION}}.amazonaws.com/myapp:${{env.APP_VERSION}}"
+      
+      - name: Push Docker image to ECR
+        run: |
+          docker push "${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{secrets.AWS_REGION}}.amazonaws.com/myapp:${{env.APP_VERSION}}"
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: pre-deploy
+    if: github.ref == 'refs/heads/main' && github.event.inputs.RELEASE_VERSION != ''
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Register new ECS task definition
+        run: |
+          TASK_DEFINITION_ARN=$(aws ecs register-task-definition \
+            --family my-task-family \
+            --execution-role-arn arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecsTaskExecutionRole \
+            --cpu "256" \
+            --memory "512" \
+            --network-mode "awsvpc" \
+            --requires-compatibilities "FARGATE" \
+            --container-definitions '[
+              {
+                "name": "my-container",
+                "image": "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/myapp:${{env.APP_VERSION}}",
+                "cpu": 256,
+                "memory": 512,
+                "essential": true,
+                "portMappings": [
+                  {
+                    "containerPort": 8000,
+                    "hostPort": 8000,
+                    "protocol": "tcp"
+                  }
+                ]
+              }
+            ]' \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+          echo "TASK_DEFINITION_ARN=${TASK_DEFINITION_ARN}" >> $GITHUB_ENV
 
       - name: Deploy to ECS
         run: |
-          # Use the loaded image for deployment
-          aws ecs update-service --cluster "${{secrets.TARGET_CLUSTER}}" --service "fast-api-service" --force-new-deployment
+          # Update the ECS service to use the new task definition revision
+          echo "Deploying with task definition ARN: ${{ env.TASK_DEFINITION_ARN }}"
+          aws ecs update-service \
+            --cluster "github-demo-cluster-1" \
+            --service "fast-api-service-1" \
+            --task-definition ${{ env.TASK_DEFINITION_ARN }} \
+            --force-new-deployment
+
