@@ -92,7 +92,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: docker-image
-          path: myapp-image.tar
+          path: backend/myapp-image.tar
 
   pre-deploy:
     runs-on: ubuntu-latest
