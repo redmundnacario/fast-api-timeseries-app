@@ -3,16 +3,19 @@ from pydantic import BaseModel
 
 from routes import observations
 
+from config import get_settings
 from db.db_setup import engine
 from db.models import observation, equipment
 
 observation.Base.metadata.create_all(bind=engine)
 equipment.Base.metadata.create_all(bind=engine)
 
+settings = get_settings()
+
 app = FastAPI(
     title="Observations",
     description="Observation data",
-    version="0.0.1",
+    version=f'{settings.APP_VERSION}',
     contact={
         "name": "Red",
         "email": "redmund.nacario@gmail.com",

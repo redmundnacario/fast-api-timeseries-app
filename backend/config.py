@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     DB_PASSWORD:str
     DB_HOST:str
     DB_PORT:str
+    APP_VERSION:str
     model_config = SettingsConfigDict(env_file=get_app_env())
 
 

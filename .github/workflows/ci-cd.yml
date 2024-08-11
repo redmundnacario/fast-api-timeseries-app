@@ -40,6 +40,7 @@ jobs:
           echo "DB_PASSWORD=${{ secrets.DEV_APP_DB_PASSWORD}}" >> backend/.env.prd
           echo "DB_HOST=${{ secrets.DEV_APP_DB_HOST }}" >> backend/.env.prd
           echo "DB_PORT=${{ secrets.DEV_APP_DB_PORT }}" >> backend/.env.prd
+          echo "APP_VERSION=${{ env._DEV_APP_VERSION }}" >> backend/.env.prd
 
           cp backend/.env.prd backend/.env
 
@@ -76,6 +77,7 @@ jobs:
           echo "DB_PASSWORD=${{ secrets.DEV_APP_DB_PASSWORD}}" >> backend/.env.prd
           echo "DB_HOST=${{ secrets.DEV_APP_DB_HOST }}" >> backend/.env.prd
           echo "DB_PORT=${{ secrets.DEV_APP_DB_PORT }}" >> backend/.env.prd
+          echo "APP_VERSION=${{ env.DEV_APP_VERSION }}" >> backend/.env.prd
 
           cp backend/.env.prd backend/.env
 
