@@ -161,7 +161,15 @@ jobs:
                     "hostPort": 8000,
                     "protocol": "tcp"
                   }
-                ]
+                ],
+                "logConfiguration": {
+                  "logDriver": "awslogs",
+                  "options": {
+                    "awslogs-group": "/ecs/my-log-group",
+                    "awslogs-region": "${{ secrets.AWS_REGION }}",
+                    "awslogs-stream-prefix": "ecs"
+                  }
+                }
               }
             ]' \
             --query 'taskDefinition.taskDefinitionArn' \
