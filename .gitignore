@@ -32,4 +32,4 @@ archive.zip
 .vscode
 
 # environment variables
-# .env*
+.env*
