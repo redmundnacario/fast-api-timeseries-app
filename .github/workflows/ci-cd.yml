@@ -139,6 +139,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Create CloudWatch log group
+        run: |
+          aws logs create-log-group --log-group-name /ecs/my-log-group --region ${{ secrets.AWS_REGION }} || true
+
       - name: Register new ECS task definition
         run: |
           TASK_DEFINITION_ARN=$(aws ecs register-task-definition \
