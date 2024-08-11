@@ -83,7 +83,8 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker compose -f ./backend/production.yml build
+          cd backend
+          docker compose -f production.yml build
           docker tag observations_rest:latest myapp:${{ env.APP_VERSION }}
           docker save myapp:${{ env.APP_VERSION }} -o myapp-image.tar
 
