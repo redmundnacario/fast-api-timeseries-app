@@ -35,11 +35,12 @@ jobs:
           touch backend/.env.prd
 
           # Loop through environment variables and write those starting with DEV_APP to .env.prd
-          for var in $(env | grep '^DEV_APP_'); do
-            key=$(echo $var | cut -d '=' -f 1)
-            value=$(echo $var | cut -d '=' -f 2-)
-            echo "${key}=${value}" >> backend/.env.prd
-          done
+          # Write each DEV_APP secret to the .env.prd file
+          echo "DB_NAME=${{ secrets.DEV_APP_DB_NAME }}" >> backend/.env.prd
+          echo "DB_USERNAME=${{ secrets.DEV_APP_DB_USERNAME }}" >> backend/.env.prd
+          echo "DB_PASSWORD=${{ secrets.DEV_APP_DB_PASSWORD}}" >> backend/.env.prd
+          echo "DB_HOST=${{ secrets.DEV_APP_DB_HOST }}" >> backend/.env.prd
+          echo "DB_PORT=${{ secrets.DEV_APP_DB_PORT }}" >> backend/.env.prd
 
       - name: Display .env.prd for debugging (optional)
         run: cat backend/.env.prd
