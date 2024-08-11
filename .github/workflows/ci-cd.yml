@@ -18,51 +18,31 @@ env:
   APP_VERSION: ${{ github.event.inputs.RELEASE_VERSION || 'latest' }}
 
 jobs:
-  # test:
-  #   runs-on: ubuntu-latest
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-  #   services:
-  #     postgres:
-  #       image: postgres:latest
-  #       env:
-  #         POSTGRES_DB: dbname
-  #         POSTGRES_USER: user
-  #         POSTGRES_PASSWORD: password
-  #       ports:
-  #         - 5432:5432
-  #       options: >-
-  #         --health-cmd="pg_isready -U ${{ secrets.POSTGRES_USER }}" 
-  #         --health-interval=10s 
-  #         --health-timeout=5s 
-  #         --health-retries=5
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
 
-  #   env:
-  #     DATABASE_URL: postgresql://user:password@localhost/dbname
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v3
-
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v4
-  #       with:
-  #         python-version: '3.11'
-
-  #     - name: Install dependencies
-  #       run: |
-  #         cd backend
-  #         python -m pip install --upgrade pip
-  #         pip install -r requirements.txt
-
-  #     - name: Run tests
-  #       run: |
-  #         cd backend
-  #         pytest
+      - name: Run tests
+        run: |
+          cd backend
+          pytest
 
   build:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event.inputs.RELEASE_VERSION != ''
-
+    needs: test
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -72,18 +52,15 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t myapp:${{env.APP_VERSION}} ./backend
-          docker save myapp:${{env.APP_VERSION}} -o myapp-image.tar
+          docker-compose -f production.yml build
+          docker tag observations_rest:latest myapp:${{ env.APP_VERSION }}
+          docker save myapp:${{ env.APP_VERSION }} -o myapp-image.tar
 
       - name: Save Docker image as artifact
         uses: actions/upload-artifact@v3
         with:
           name: docker-image
           path: myapp-image.tar
-
-      # - name: Create ECR repository
-      #   run: |
-      #     aws ecr create-repository --repository-name myapp --region ${{ secrets.AWS_REGION }} || true
 
   pre-deploy:
     runs-on: ubuntu-latest
