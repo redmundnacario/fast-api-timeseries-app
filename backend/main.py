@@ -3,6 +3,12 @@ from pydantic import BaseModel
 
 from routes import observations
 
+from db.db_setup import engine
+from db.models import observation, equipment
+
+observation.Base.metadata.create_all(bind=engine)
+equipment.Base.metadata.create_all(bind=engine)
+
 app = FastAPI(
     title="Observations",
     description="Observation data",

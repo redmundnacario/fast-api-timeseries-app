@@ -1,0 +1,16 @@
+version: '3.8'
+
+volumes:
+  app_data:
+
+services:
+  app:
+    build: .
+    image: observations_rest
+    container_name: observationsRESTContainer
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    volumes:
+      - app_data:/app_data

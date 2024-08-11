@@ -10,6 +10,12 @@ python = "^3.11"
 uvicorn = "^0.30.5"
 fastapi = "^0.112.0"
 pydantic = "^2.8.2"
+sqlalchemy = "^2.0.32"
+psycopg2-binary = "^2.9.9"
+alembic = "^1.13.2"
+pydantic-settings = "^2.4.0"
+pytest = "^8.3.2"
+python-decouple = "^3.8"
 
 
 [build-system]
