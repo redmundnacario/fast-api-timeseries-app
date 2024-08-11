@@ -12,10 +12,12 @@ equipment.Base.metadata.create_all(bind=engine)
 
 settings = get_settings()
 
+app_version =  f'{getattr(settings, "APP_VERSION", "latest")}'
+
 app = FastAPI(
     title="Observations",
     description="Observation data",
-    version=f'{settings.APP_VERSION}',
+    version=app_version,
     contact={
         "name": "Red",
         "email": "redmund.nacario@gmail.com",
