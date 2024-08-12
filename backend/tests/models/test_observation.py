@@ -12,9 +12,9 @@ def test_create_observation():
   assert obsData.value == 2
   assert obsData.flag == "valid"
   
-# def test_equipment_obsevation_relationship():
-#   eqData = Equipment(name = "station #2")
-#   obsData = Observation(timestamp = "2024-08-11T08:30:17.307Z", 
-#                         value = 2,
-#                         flag = "valid", equipment = eqData)
-#   assert obsData.equipmentName == eqData
+def test_equipment_obsevation_relationship():
+  eqData = Equipment(id = "station #2")
+  obsData = Observation(timestamp = "2024-08-11T08:30:17.307Z", 
+                        value = 2,
+                        flag = "valid", equipment = eqData)
+  assert obsData.equipment == eqData
