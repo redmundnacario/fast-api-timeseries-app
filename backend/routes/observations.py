@@ -48,13 +48,13 @@ async def create_observation(observations: List[ObservationCreate] = Body(
         example = [
                     {
                         "equipmentId": "EQ-12495",
-                        "timestamp": "2023-02-12T06:30:00Z",
+                        "timestamp": example_times["end_time"],
                         "value": 78.8,
                         "flag": "valid"
                     },
                     {
                         "equipmentId": "EQ-12492",
-                        "timestamp": "2023-01-12T06:30:00Z",
+                        "timestamp": example_times["end_time"],
                         "value": 8.8,
                         "flag": "missing"
                     }

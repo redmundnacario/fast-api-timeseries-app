@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from sqlalchemy import func, text
+from sqlalchemy import asc, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -74,5 +74,8 @@ def get_observations_by_equipmentId_controller(
   
   if end_time:
     query = query.filter(Observation.timestamp <= end_time)
+    
+  # sort descending
+  query = query.order_by(asc(Observation.timestamp))
         
   return query.all()
